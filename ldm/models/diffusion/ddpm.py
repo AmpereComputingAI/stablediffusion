@@ -855,7 +855,10 @@ class LatentDiffusion(DDPM):
             key = 'c_concat' if self.model.conditioning_key == 'concat' else 'c_crossattn'
             cond = {key: cond}
 
+        print(6 * " " + "a")
+        print(self.model)
         x_recon = self.model(x_noisy, t, **cond)
+        print(6 * " " + "b")
 
         if isinstance(x_recon, tuple) and not return_ids:
             return x_recon[0]
