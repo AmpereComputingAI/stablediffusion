@@ -856,6 +856,10 @@ class LatentDiffusion(DDPM):
             cond = {key: cond}
 
         print(6 * " " + "a")
+        print(hash(self.model))
+        print(x_noisy.size())
+        print(t.size())
+        print(cond)
         x_recon = self.model(x_noisy, t, **cond)
         print(6 * " " + "b")
 
