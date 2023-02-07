@@ -147,20 +147,21 @@ class DDIMSampler(object):
         print(f"Running DDIM Sampling with {total_steps} timesteps")
 
         iterator = tqdm(time_range, desc='DDIM Sampler', total=total_steps)
-
+        print("a")
         for i, step in enumerate(iterator):
             index = total_steps - i - 1
+            print("b")
             ts = torch.full((b,), step, device=device, dtype=torch.long)
-
+            print("c")
             if mask is not None:
                 assert x0 is not None
                 img_orig = self.model.q_sample(x0, ts)  # TODO: deterministic forward pass?
                 img = img_orig * mask + (1. - mask) * img
-
+            print("d")
             if ucg_schedule is not None:
                 assert len(ucg_schedule) == len(time_range)
                 unconditional_guidance_scale = ucg_schedule[i]
-
+            print("e")
             outs = self.p_sample_ddim(img, cond, ts, index=index, use_original_steps=ddim_use_original_steps,
                                       quantize_denoised=quantize_denoised, temperature=temperature,
                                       noise_dropout=noise_dropout, score_corrector=score_corrector,
@@ -169,9 +170,11 @@ class DDIMSampler(object):
                                       unconditional_conditioning=unconditional_conditioning,
                                       dynamic_threshold=dynamic_threshold)
             img, pred_x0 = outs
+            print("f")
             if callback: callback(i)
+            print("g")
             if img_callback: img_callback(pred_x0, i)
-
+            print("h")
             if index % log_every_t == 0 or index == total_steps - 1:
                 intermediates['x_inter'].append(img)
                 intermediates['pred_x0'].append(pred_x0)
