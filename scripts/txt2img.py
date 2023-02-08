@@ -232,7 +232,7 @@ def main(opt):
 
     precision_scope = autocast if opt.precision == "autocast" else nullcontext
     with torch.no_grad(), \
-        precision_scope("cuda"), \
+        precision_scope("cpu"), \
         model.ema_scope():
             all_samples = list()
             for n in trange(opt.n_iter, desc="Sampling"):
