@@ -1,4 +1,5 @@
 import argparse, os
+import time
 import cv2
 import torch
 import numpy as np
@@ -204,6 +205,12 @@ def parse_args():
     return opt
 
 
+def leave_timestamp(action):
+    with open(f"run_{os.getpid()}.log", "a") as log:
+        log.write(f"{time.time()}: {action}\n")
+
+
+
 def put_watermark(img, wm_encoder=None):
     if wm_encoder is not None:
         img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
@@ -213,6 +220,7 @@ def put_watermark(img, wm_encoder=None):
 
 
 def main(opt):
+    leave_timestamp("initializing")
     seed_everything(opt.seed)
 
     config = OmegaConf.load(f"{opt.config}")
@@ -257,6 +265,7 @@ def main(opt):
     start_code = None
     if opt.fixed_code:
         start_code = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
+    leave_timestamp("loading model")
 
     if opt.torchscript or opt.ipex:
         transformer = model.cond_stage_model.model
@@ -347,6 +356,7 @@ def main(opt):
             for _ in range(3):
                 x_samples_ddim = model.decode_first_stage(samples_ddim)
 
+    leave_timestamp("running inference")
     precision_scope = autocast if opt.precision=="autocast" or opt.bf16 else nullcontext
     with torch.no_grad(), \
         precision_scope(opt.device), \
@@ -354,6 +364,7 @@ def main(opt):
             all_samples = list()
             for n in trange(opt.n_iter, desc="Sampling"):
                 for prompts in tqdm(data, desc="data"):
+                    leave_timestamp("sampling")
                     uc = None
                     if opt.scale != 1.0:
                         uc = model.get_learned_conditioning(batch_size * [""])
@@ -383,6 +394,8 @@ def main(opt):
                         sample_count += 1
 
                     all_samples.append(x_samples)
+                    leave_timestamp("sampling finished")
+            leave_timestamp("inference finished")
 
             # additionally, save as grid
             grid = torch.stack(all_samples, 0)
