@@ -1332,7 +1332,9 @@ class DiffusionWrapper(pl.LightningModule):
                 # an error: RuntimeError: forward() is missing value for argument 'argument_3'.
                 out = self.scripted_diffusion_model(x, t, cc)
             else:
-                out = self.diffusion_model(x, t, context=cc)
+                scripted_unet = torch.jit.trace(self.diffusion_model, (x, t, cc), check_trace=False)
+                self.scripted_diffusion_model = torch.jit.freeze(scripted_unet)
+                out = self.scripted_diffusion_model(x, t, context=cc)
         elif self.conditioning_key == 'hybrid':
             xc = torch.cat([x] + c_concat, dim=1)
             cc = torch.cat(c_crossattn, 1)
